@@ -79,7 +79,7 @@ with tab3:
     transactions_year = d.groupby("year",as_index=False)["transactions"].sum().sort_values("year")
     st.plotly_chart(px.bar(transactions_year, x="year", y="transactions",title="Transacciones por año"), use_container_width=True)
 
-    top_store = d.groupby("store_nbr")["sales"].sum().sort_values("sales",ascending=False)
+    top_store = d.groupby("store_nbr",as_index=False)["sales"].sum().sort_values("sales",ascending=False)
     st.plotly_chart(px.bar(top_store, x="store_nbr", y="sales",title="Ranking de tiendas con más ventas "), use_container_width=True)
 
     top_family = d.groupby("family")["sales"].sum().sort_values("sales",ascending=False)
