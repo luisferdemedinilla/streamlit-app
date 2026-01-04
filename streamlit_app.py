@@ -82,7 +82,7 @@ with tab3:
     top_store = d.groupby("store_nbr",as_index=False)["sales"].sum().sort_values("sales",ascending=False)
     st.plotly_chart(px.bar(top_store, x="store_nbr", y="sales",title="Ranking de tiendas con más ventas "), use_container_width=True)
 
-    top_family = d.groupby("family")["sales"].sum().sort_values("sales",ascending=False)
+    top_family = d.groupby("family",as_index=False)["sales"].sum().sort_values("sales",ascending=False)
     st.success(f"Producto más vendido en {state}: {top_family.iloc[0]['family']}")
     
 with tab4:
