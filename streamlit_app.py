@@ -1,6 +1,32 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+def style_fig(fig, title: str | None = None):
+    if title is not None:
+        fig.update_layout(title=title)
+
+    fig.update_layout(
+        template="plotly_white",
+        margin=dict(l=10, r=10, t=50, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",   # fondo exterior transparente
+        plot_bgcolor="rgba(0,0,0,0)",    # fondo interior transparente
+        title=dict(x=0.0, xanchor="left"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ),
+        hovermode="x unified",
+    )
+
+    # Grid suave
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(15, 23, 42, 0.08)", zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(15, 23, 42, 0.08)", zeroline=False)
+
+    return fig
+
 @st.cache_data
 def load_data(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
@@ -46,26 +72,38 @@ with tab1:
 
     st.subheader("Top productos más vendidos")
     top_prod = df.groupby("family",as_index=False)["sales"].sum().sort_values("sales",ascending=False).head(10)
-    st.plotly_chart(px.bar(top_prod, x="sales", y="family", orientation="h"), use_container_width=True)
+    fig = px.bar(top_prod, x="sales", y="family", orientation="h")
+    fig = style_fig(fig, "Top productos más vendidos")
+    st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Distribución ventas por tienda")
     by_store = df.groupby("store_nbr",as_index=False)["sales"].sum()
-    st.plotly_chart(px.histogram(by_store, x="sales"), use_container_width=True)
+    fig = px.histogram(by_store, x="sales")
+    fig = style_fig(fig,"Distribución ventas por tienda")
+    st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Top tiendas con ventas en promoción")
     promo  = df[df["onpromotion"]>0].groupby("store_nbr",as_index=False)["sales"].sum().sort_values("sales",ascending=False).head(10)
-    st.plotly_chart(px.bar(promo , x="sales",y="store_nbr", orientation="h"), use_container_width=True)
+    fig = px.bar(promo , x="sales",y="store_nbr", orientation="h")
+    fig = style_fig(fig,"Top tiendas con ventas en promoción")
+    st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Estacionalidad")
     colA, colB, colC = st.columns(3)
     dow = df.groupby("day_of_week",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.bar(dow, x="day_of_week", y="sales",title="Venta media por días de la semana"), use_container_width=True)
+    fig = px.bar(dow, x="day_of_week", y="sales")
+    fig = style_fig(fig,"Venta media por días de la semana")
+    colA.plotly_chart(fig, use_container_width=True)
 
     wk = df.groupby("week",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colB.plotly_chart(px.line(wk, x="week", y="sales",title="Ventas media por semana"), use_container_width=True)
+    fig = px.line(wk, x="week", y="sales")
+    fig = style_fig(fig,"Ventas media por semana")
+    colB.plotly_chart(fig, use_container_width=True)
 
     mo = df.groupby("month",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colC.plotly_chart(px.line(mo, x="month", y="sales",title="Ventas media por mes"), use_container_width=True)
+    fig = px.line(mo, x="month", y="sales")
+    fig = style_fig(fig,"Ventas media por mes")
+    colC.plotly_chart(fig, use_container_width=True)
 
 with tab2:
     st.subheader("Análisis por tienda")
@@ -79,7 +117,9 @@ with tab2:
 
 
     sales_year = d.groupby("year",as_index=False)["sales"].sum().sort_values("year")
-    st.plotly_chart(px.bar(sales_year, x="year", y="sales",title="Ventas por año"), use_container_width=True)
+    fig = px.bar(sales_year, x="year", y="sales")
+    fig = style_fig(fig,"Ventas por año")
+    st.plotly_chart(fig, use_container_width=True)
 
 with tab3:
     st.subheader("Análisis por estado")
@@ -87,10 +127,14 @@ with tab3:
     d = df[df["state"] == state]
 
     transactions_year = d.groupby("year",as_index=False)["transactions"].sum().sort_values("year")
-    st.plotly_chart(px.bar(transactions_year, x="year", y="transactions",title="Transacciones por año"), use_container_width=True)
+    fig = px.bar(transactions_year, x="year", y="transactions")
+    fig = style_fig(fig,"Transacciones por año")
+    st.plotly_chart(fig, use_container_width=True)
 
     top_store = d.groupby("store_nbr",as_index=False)["sales"].sum().sort_values("sales",ascending=False)
-    st.plotly_chart(px.bar(top_store, x="store_nbr", y="sales",title="Ranking de tiendas con más ventas "), use_container_width=True)
+    fig = px.bar(top_store, x="store_nbr", y="sales")
+    fig = style_fig(fig,"Ranking de tiendas con más ventas")
+    st.plotly_chart(fig, use_container_width=True)
 
     top_family = d.groupby("family",as_index=False)["sales"].sum().sort_values("sales",ascending=False)
     st.success(f"Producto más vendido en {state}: {top_family.iloc[0]['family']}")
@@ -102,5 +146,14 @@ with tab4:
     st.metric("Sales media sin promo", float(d0))
     st.metric("Sales media con promo", float(d1))
 
-    daily = df.dropna(subset=["date"]).groupby("date", as_index=False)["sales"].sum()
-    st.plotly_chart(px.line(daily, x="date", y="sales"), use_container_width=True)
+    #daily = df.dropna(subset=["date"]).groupby("date", as_index=False)
+    
+    daily_no_prom = df[df["onpromotion"] == 0].groupby("date", as_index=False)["sales"].sum()
+    fig = px.line(daily_no_prom, x="date", y="sales")
+    fig = style_fig(fig,"Distribución de ventas sin promo")
+    st.plotly_chart(fig, use_container_width=True)
+
+    daily_prom = df[df["onpromotion"] > 0].groupby("date", as_index=False)["sales"].sum()
+    fig = px.line(daily_prom, x="date", y="sales")
+    fig = style_fig(fig,"Distribución de ventas con promo")
+    st.plotly_chart(fig, use_container_width=True)
