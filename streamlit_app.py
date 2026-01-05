@@ -39,6 +39,13 @@ def load_data(path: str) -> pd.DataFrame:
     return df
 
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
+st.markdown("""
+<style>
+.block-container {
+    padding-top: 2.5rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 st.title("Dashboard de Ventas")
 st.caption("📊 Panel interactivo de análisis de ventas")
