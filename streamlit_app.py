@@ -40,7 +40,8 @@ def load_data(path: str) -> pd.DataFrame:
 
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
 
-st.title("📊 Dashboard de Ventas")
+st.title("Dashboard de Ventas")
+st.caption("📊 Panel interactivo de análisis de ventas")
 st.markdown("""
 <style>
 .block-container {padding-top: 1.2rem; padding-bottom: 2rem;}
@@ -197,7 +198,13 @@ with tab4:
         c2.metric("Sales media con promo", float(d1))
 
     with st.container(border=True):
-        st.subheader("Ventas diarias")
-        daily = df.dropna(subset=["date"]).groupby("date", as_index=False)["sales"].sum()
-        fig = px.line(daily, x="date", y="sales")
+        st.subheader("Distribución de ventas sin promo")
+        daily_no_prom = df[df["onpromotion"] == 0].groupby("date", as_index=False)["sales"].sum()
+        fig = px.line(daily_no_prom, x="date", y="sales")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with st.container(border=True):
+        st.subheader("Distribución de ventas con promo")
+        daily_prom = df[df["onpromotion"] > 0].groupby("date", as_index=False)["sales"].sum()
+        fig = px.line(daily_prom, x="date", y="sales")
         st.plotly_chart(fig, use_container_width=True)
