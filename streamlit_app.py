@@ -95,12 +95,14 @@ with tab1:
               .head(10)
         )
         fig = px.bar(top_prod, x="sales", y="family", orientation="h")
+        fig.update_traces(marker_color="#4F46E5")
         st.plotly_chart(fig, use_container_width=True)
 
     with col2.container(border=True):
         st.subheader("Distribución ventas por tienda")
         by_store = df.groupby("store_nbr", as_index=False)["sales"].sum()
         fig = px.histogram(by_store, x="sales")
+        
         st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
@@ -143,8 +145,10 @@ with tab1:
               .sort_values("week")
         )
         fig = px.line(wk, x="week", y="sales")
+        #fig.update_traces(line=dict(color="#4F46E5", width=3))
+        #color_discrete_sequence=["#4F46E5", "#22C55E", "#F59E0B"])
         st.plotly_chart(fig, use_container_width=True)
-
+        
     with col6.container(border=True):
         st.subheader("Estacionalidad: venta media por mes")
         mo = (
@@ -203,7 +207,7 @@ with tab4:
         c1, c2 = st.columns(2)
         c1.metric("Sales media sin promo", float(d0))
         c2.metric("Sales media con promo", float(d1))
-
+    """
     with st.container(border=True):
         st.subheader("Distribución de ventas sin promo")
         daily_no_prom = df[df["onpromotion"] == 0].groupby("date", as_index=False)["sales"].sum()
@@ -215,3 +219,24 @@ with tab4:
         daily_prom = df[df["onpromotion"] > 0].groupby("date", as_index=False)["sales"].sum()
         fig = px.line(daily_prom, x="date", y="sales")
         st.plotly_chart(fig, use_container_width=True)
+    """
+
+
+    dtemp = df.dropna(subset=["date"]).copy()
+    dtemp["promo"] = dtemp["onpromotion"].gt(0).map({True: "Con promo", False: "Sin promo"})
+
+    series = (
+        dtemp.groupby(["date", "promo"], as_index=False)["sales"]
+            .sum()
+            .sort_values("date")
+    )
+
+    fig = px.line(
+        series,
+        x="date",
+        y="sales",
+        color="promo",
+        title="Evolución temporal de ventas: con vs sin promoción"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
