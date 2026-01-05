@@ -49,13 +49,13 @@ with tab1:
     st.subheader("Estacionalidad")
     colA, colB, colC = st.columns(3)
     dow = df.groupby("day_of_week",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.bar(dow, x="day_of_week", y="sales"), use_container_width=True)
+    colA.plotly_chart(px.bar(dow, x="day_of_week", y="sales",title="Venta media por días de la semana"), use_container_width=True)
 
     wk = df.groupby("week",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.line(wk, x="week", y="sales"), use_container_width=True)
+    colA.plotly_chart(px.line(wk, x="week", y="sales",title="Ventas media por semana"), use_container_width=True)
 
     mo = df.groupby("month",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.line(mo, x="month", y="sales"), use_container_width=True)
+    colA.plotly_chart(px.line(mo, x="month", y="sales",title="Ventas media por mes"), use_container_width=True)
 
 with tab2:
     st.subheader("Análisis por tienda")
@@ -63,9 +63,9 @@ with tab2:
     d = df[df["store_nbr"] == store]
 
     c1, c2 = st.columns(2)
-    c1.metric("Productos vendidos",d["sales"].sum())
+    c1.metric("Productos vendidos",int(d["sales"].sum()))
     #c2.metric("Productos vendidos",d["family"].count())
-    c2.metric("Productos vendidos en promoción",d[d["onpromotion"]>0]["sales"].sum())
+    c2.metric("Productos vendidos en promoción",int(d[d["onpromotion"]>0]["sales"].sum()))
 
 
     sales_year = d.groupby("year",as_index=False)["sales"].sum().sort_values("year")
