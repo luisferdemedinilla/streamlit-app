@@ -12,10 +12,20 @@ def load_data(path: str) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
     return df
 
-st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
 
 st.title("📊 Dashboard de Ventas")
-
+st.markdown("""
+<style>
+.block-container {padding-top: 1.2rem; padding-bottom: 2rem;}
+div[data-testid="stMetric"] {
+    background: rgba(245, 247, 251, 0.9);
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+</style>
+""", unsafe_allow_html=True)
 # Carga de datos: si lo vas a subir a Streamlit Cloud, mejor permitir upload
 uploaded = st.file_uploader("Sube el dataset (CSV)", type=["csv"])
 if not uploaded:
@@ -31,8 +41,8 @@ with tab1:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Tiendas", int(df["store_nbr"].nunique()))
     c2.metric("Productos",int(df["family"].nunique()))
-    c3.metric("Estado",df["state"].nunique())
-    c4.metric("Meses",df[["year","month"]].drop_duplicates().shape[0])
+    c3.metric("Estados",int(df["state"].nunique()))
+    c4.metric("Meses",int(df[["year","month"]].drop_duplicates().shape[0]))
 
     st.subheader("Top productos más vendidos")
     top_prod = df.groupby("family",as_index=False)["sales"].sum().sort_values("sales",ascending=False).head(10)
@@ -52,10 +62,10 @@ with tab1:
     colA.plotly_chart(px.bar(dow, x="day_of_week", y="sales",title="Venta media por días de la semana"), use_container_width=True)
 
     wk = df.groupby("week",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.line(wk, x="week", y="sales",title="Ventas media por semana"), use_container_width=True)
+    colB.plotly_chart(px.line(wk, x="week", y="sales",title="Ventas media por semana"), use_container_width=True)
 
     mo = df.groupby("month",as_index=False)["sales"].mean().sort_values("sales", ascending=False)
-    colA.plotly_chart(px.line(mo, x="month", y="sales",title="Ventas media por mes"), use_container_width=True)
+    colC.plotly_chart(px.line(mo, x="month", y="sales",title="Ventas media por mes"), use_container_width=True)
 
 with tab2:
     st.subheader("Análisis por tienda")
