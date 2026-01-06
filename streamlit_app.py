@@ -220,6 +220,7 @@ with tab4:
         c2.metric("Sales media con promo", float(d1))
 
     dtemp = df.dropna(subset=["date"]).copy()
+    dtemp["promo"] = dtemp["onpromotion"].gt(0).map({True: "Con promo", False: "Sin promo"})
     dtemp["year_week"] = dtemp["date"].dt.to_period("W").astype(str)
 
     series = (
