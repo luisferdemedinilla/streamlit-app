@@ -235,6 +235,7 @@ with tab4:
 
     fig = px.line(series, x="year_week", y="sales", color="promo",
                 title="Ventas semanales: con vs sin promo")
+    fig.update_layout(hovermode="x unified")
     fig.update_xaxes(
     dtick="M12",
     tickformat="%Y"
