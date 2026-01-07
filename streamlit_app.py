@@ -204,7 +204,7 @@ with tab3:
 
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
-        top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=False)
+        top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
         fig.update_yaxes(type="category")
@@ -235,4 +235,8 @@ with tab4:
 
     fig = px.line(series, x="year_week", y="sales", color="promo",
                 title="Ventas semanales: con vs sin promo")
+    fig.update_xaxes(
+    dtick="M12",
+    tickformat="%Y"
+)
     st.plotly_chart(fig, use_container_width=True)
