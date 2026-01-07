@@ -117,9 +117,10 @@ with tab1:
             df[df["onpromotion"] > 0]
               .groupby("store_nbr", as_index=False)["sales"]
               .sum()
-              .sort_values("sales", ascending=False)
+              .sort_values("sales", ascending=True)
               .head(10)
         )
+        promo["store_nbr"] = promo["store_nbr"].astype(str)
         fig = px.bar(promo, x="sales", y="store_nbr", orientation="h")
         st.plotly_chart(fig, use_container_width=True)
 
@@ -168,8 +169,10 @@ with tab2:
 
     with st.container(border=True):
         c1, c2 = st.columns(2)
-        c1.metric("Ventas totales (sales)", float(d["sales"].sum()))
-        c2.metric("Ventas en promoción (sales)", float(d[d["onpromotion"] > 0]["sales"].sum()))
+        total_sales = d["sales"].sum()
+        promo_sales = d[d["onpromotion"] > 0]["sales"].sum()
+        c1.metric("Ventas totales (sales)", f"{total_sales:,.2f}")
+        c2.metric("Ventas en promoción (sales)", f"{promo_sales:,.2f}")
 
     with st.container(border=True):
         st.subheader("Ventas por año")
@@ -215,9 +218,9 @@ with tab4:
     with st.container(border=True):
         d0 = df[df["onpromotion"] == 0]["sales"].mean()
         d1 = df[df["onpromotion"] > 0]["sales"].mean()
-        c1, c2 = st.columns(2)
-        c1.metric("Sales media sin promo", float(d0))
-        c2.metric("Sales media con promo", float(d1))
+        c1, c2 = st.columns(2) 
+        c1.metric("Sales media sin promo", f"{d0:,.2f}")
+        c2.metric("Sales media con promo", f"{d1:,.2f}")
 
     dtemp = df.dropna(subset=["date"]).copy()
     dtemp["promo"] = dtemp["onpromotion"].gt(0).map({True: "Con promo", False: "Sin promo"})
