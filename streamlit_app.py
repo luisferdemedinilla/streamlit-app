@@ -235,11 +235,10 @@ with tab4:
 
     fig = px.line(series, x="year_week", y="sales", color="promo",
                 title="Ventas semanales: con vs sin promo")
-    years = sorted(df["date"].dt.year.unique())
+    fig.update_layout(hovermode="x unified")
 
     fig.update_xaxes(
-        tickmode="array",
-        tickvals=[pd.Timestamp(f"{y}-01-01") for y in years],
-        ticktext=[str(y) for y in years]
+        dtick="M12",
+        tickformat="%Y"
     )
     st.plotly_chart(fig, use_container_width=True)
