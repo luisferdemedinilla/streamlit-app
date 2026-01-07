@@ -207,6 +207,7 @@ with tab3:
         top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=False)
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
+        fig.update_yaxes(type="category")
         st.plotly_chart(fig, use_container_width=True)
 
     top_family = d.groupby("family", as_index=False)["sales"].sum().sort_values("sales", ascending=False)
