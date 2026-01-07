@@ -120,8 +120,9 @@ with tab1:
               .sort_values("sales", ascending=True)
               .head(10)
         )
-        promo["store_nbr"] = promo["store_nbr"].astype(str)
+        #promo["store_nbr"] = promo["store_nbr"].astype(str)
         fig = px.bar(promo, x="sales", y="store_nbr", orientation="h")
+        fig.update_yaxes(type="category")
         st.plotly_chart(fig, use_container_width=True)
 
     with col4.container(border=True):
