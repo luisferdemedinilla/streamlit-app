@@ -226,19 +226,17 @@ with tab4:
 
     dtemp = df.dropna(subset=["date"]).copy()
     dtemp["promo"] = dtemp["onpromotion"].gt(0).map({True: "Con promo", False: "Sin promo"})
-    dtemp["year_week"] = dtemp["date"].dt.to_period("W").astype(str)
-
+    
     series = (
-        dtemp.groupby(["year_week", "promo"], as_index=False)["sales"]
-            .sum()
-    )
+    dtemp.groupby([pd.Grouper(key="date", freq="W-MON"), "promo"], as_index=False)["sales"]
+         .sum()
+         .sort_values("date")
+)
 
-    fig = px.line(series, x="year_week", y="sales", color="promo",
+    fig = px.line(series, x="date", y="sales", color="promo", markers=True,
                 title="Ventas semanales: con vs sin promo")
-    fig.update_layout(hovermode="x unified")
 
-    fig.update_xaxes(
-        dtick="M12",
-        tickformat="%Y"
-    )
+    fig.update_layout(hovermode="x unified")
+    fig.update_xaxes(dtick="M12", tickformat="%Y")  # ← solo años
+
     st.plotly_chart(fig, use_container_width=True)
