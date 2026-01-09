@@ -181,8 +181,9 @@ with tab2:
         sales_year["year"] = sales_year["year"].astype(str)
         fig = px.bar(sales_year, x="year", y="sales")
         fig.update_traces(texttemplate="%{y:,.0f}", textposition="outside")
+        fig.update_traces(width=0.4)
         fig.update_yaxes(title="Ventas", tickformat=",.0f")
-
+        fig.update_xaxes(type="category")
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -191,7 +192,7 @@ with tab3:
     state = st.selectbox("Selecciona estado", sorted(df["state"].dropna().unique()))
     d = df[df["state"] == state]
 
-    col1, col2 = st.columns([3, 2]) 
+    col1, col2 = st.columns(2)   #[3, 2]
 
     with col1.container(border=True):
         st.subheader("Transacciones por año")
@@ -238,5 +239,5 @@ with tab4:
 
     fig.update_layout(hovermode="x unified")
     fig.update_xaxes(dtick="M12", tickformat="%Y")  # ← solo años
-
+    fig.update_xaxes(range=[series["date"].min(), series["date"].max()])
     st.plotly_chart(fig, use_container_width=True)
