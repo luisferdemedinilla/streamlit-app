@@ -206,6 +206,7 @@ with tab3:
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
         top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
+        top_store = top_store[top_store["sales"] > 0]
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
         fig.update_yaxes(type="category")
@@ -239,5 +240,5 @@ with tab4:
 
     fig.update_layout(hovermode="x unified")
     fig.update_xaxes(dtick="M12", tickformat="%Y")  # ← solo años
-    fig.update_xaxes(range=[series["date"].min(), series["date"].max()])
+    fig.update_xaxes(range=[series["date"].min() - pd.Timedelta(days=7), series["date"].max() + pd.Timedelta(days=7)])
     st.plotly_chart(fig, use_container_width=True)
