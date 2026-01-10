@@ -31,7 +31,7 @@ def style_fig(fig, title: str | None = None):
 @st.cache_data
 def load_data(uploaded_file: str) -> pd.DataFrame:
     bytes_data = uploaded_file.getvalue()
-    df = pd.read_csv(io.BytesIO(bytes_data))
+    df = pd.read_csv(io.BytesIO(bytes_data), low_memory=False)
 
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")
