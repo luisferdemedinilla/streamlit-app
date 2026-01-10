@@ -44,11 +44,20 @@ def load_data(uploaded_file: str) -> pd.DataFrame:
 
 @st.cache_data
 def load_store(df,store):
-    return df[df["store_nbr"] == store].copy()
+    d = df[df["store_nbr"] == store].copy()
+    total_sales = d["sales"].sum()
+    promo_sales = d[d["onpromotion"] > 0]["sales"].sum()
+    sales_year = d.groupby("year", as_index=False)["sales"].sum().sort_values("year")
+    sales_year["year"] = sales_year["year"].astype(str)
+    return (d,total_sales,promo_sales,sales_year)
 
 @st.cache_data
 def load_state(df,state):
-    return df[df["state"] == state].copy()
+    d= df[df["state"] == state].copy()
+    transactions_year = d.groupby("year", as_index=False)["transactions"].sum().sort_values("year")
+    transactions_year["year"] = transactions_year["year"].astype(str)
+    top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
+    return (d,transactions_year,top_store)
 
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
 st.markdown("""
@@ -178,19 +187,15 @@ with tab1:
 with tab2:
     st.subheader("Análisis por tienda")
     store = st.selectbox("Selecciona tienda", sorted(df["store_nbr"].dropna().unique()))
-    d = load_store(df,store)
+    d,total_sales,promo_sales,sales_year = load_store(df,store)
 
     with st.container(border=True):
         c1, c2 = st.columns(2)
-        total_sales = d["sales"].sum()
-        promo_sales = d[d["onpromotion"] > 0]["sales"].sum()
         c1.metric("Ventas totales (sales)", f"{total_sales:,.2f}")
         c2.metric("Ventas en promoción (sales)", f"{promo_sales:,.2f}")
 
     with st.container(border=True):
         st.subheader("Ventas por año")
-        sales_year = d.groupby("year", as_index=False)["sales"].sum().sort_values("year")
-        sales_year["year"] = sales_year["year"].astype(str)
         fig = px.bar(sales_year, x="year", y="sales")
         fig.update_traces(texttemplate="%{y:,.0f}", textposition="outside")
         fig.update_traces(width=0.4)
@@ -202,14 +207,12 @@ with tab2:
 with tab3:
     st.subheader("Análisis por estado")
     state = st.selectbox("Selecciona estado", sorted(df["state"].dropna().unique()))
-    d = load_state(df,state)
+    d,transactions_year,top_store = load_state(df,state)
 
     col1, col2 = st.columns(2)   #[3, 2]
 
     with col1.container(border=True):
         st.subheader("Transacciones por año")
-        transactions_year = d.groupby("year", as_index=False)["transactions"].sum().sort_values("year")
-        transactions_year["year"] = transactions_year["year"].astype(str)
         fig = px.bar(transactions_year, x="year", y="transactions")
         fig.update_traces(texttemplate="%{y:,.0f}", textposition="outside")
         fig.update_yaxes(title="Transacciones", tickformat=",.0f")
@@ -217,7 +220,7 @@ with tab3:
 
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
-        top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
+        
         #top_store = top_store[top_store["sales"] > 0]
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
