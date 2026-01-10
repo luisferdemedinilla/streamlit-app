@@ -2,16 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import io
-def style_fig(fig, title: str | None = None):
-    if title is not None:
-        fig.update_layout(title=title)
 
+def style_fig(fig):
     fig.update_layout(
         template="plotly_white",
-        margin=dict(l=10, r=10, t=50, b=10),
+        margin=dict(l=10, r=10, t=20, b=10),  # menos margen arriba
         paper_bgcolor="rgba(0,0,0,0)",   # fondo exterior transparente
         plot_bgcolor="rgba(0,0,0,0)",    # fondo interior transparente
-        title=dict(x=0.0, xanchor="left"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -23,8 +20,16 @@ def style_fig(fig, title: str | None = None):
     )
 
     # Grid suave
-    fig.update_xaxes(showgrid=True, gridcolor="rgba(15, 23, 42, 0.08)", zeroline=False)
-    fig.update_yaxes(showgrid=True, gridcolor="rgba(15, 23, 42, 0.08)", zeroline=False)
+    fig.update_xaxes(
+        showgrid=True,
+        gridcolor="rgba(15, 23, 42, 0.08)",
+        zeroline=False
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(15, 23, 42, 0.08)",
+        zeroline=False
+    )
 
     return fig
 
@@ -119,7 +124,7 @@ with tab1:
               .tail(10)
         )
         fig = px.bar(top_prod, x="sales", y="family", orientation="h")
-        #fig = style_fig(fig)
+        fig = style_fig(fig)
         #fig.update_traces(marker_color="#4F46E5")
         st.plotly_chart(fig, width="stretch")
 
@@ -127,6 +132,7 @@ with tab1:
         st.subheader("Distribución ventas por tienda")
         by_store = df.groupby("store_nbr", as_index=False)["sales"].sum()
         fig = px.histogram(by_store, x="sales",nbins=20)
+        fig = style_fig(fig)
         #fig.update_traces(marker_color="#4F46E5")
         st.plotly_chart(fig, width="stretch")
 
@@ -146,6 +152,7 @@ with tab1:
         )
         #promo["store_nbr"] = promo["store_nbr"].astype(str)
         fig = px.bar(promo, x="sales", y="store_nbr", orientation="h")
+        fig = style_fig(fig)
         fig.update_yaxes(type="category")
         st.plotly_chart(fig, width="stretch")
 
@@ -157,6 +164,7 @@ with tab1:
               .sort_values("sales", ascending=False)
         )
         fig = px.bar(dow, x="day_of_week", y="sales")
+        fig = style_fig(fig)
         st.plotly_chart(fig, width="stretch")
 
     st.divider()
@@ -172,6 +180,7 @@ with tab1:
               .sort_values("week")
         )
         fig = px.line(wk, x="week", y="sales",markers=True)
+        fig = style_fig(fig)
         #fig.update_traces(line=dict(color="#4F46E5", width=3))
         #color_discrete_sequence=["#4F46E5", "#22C55E", "#F59E0B"])
         st.plotly_chart(fig, width="stretch")
@@ -184,6 +193,7 @@ with tab1:
               .sort_values("month")
         )
         fig = px.line(mo, x="month", y="sales",markers=True)
+        fig = style_fig(fig)
         st.plotly_chart(fig, width="stretch")
 
 
@@ -224,7 +234,7 @@ with tab3:
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
         
-        #top_store = top_store[top_store["sales"] > 0]
+        top_store = top_store[top_store["sales"] > 0]
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
         fig.update_yaxes(type="category")
