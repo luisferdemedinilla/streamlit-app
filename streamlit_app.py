@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import io
+from pathlib import Path
 
 def style_fig(fig):
     fig.update_layout(
@@ -33,24 +34,66 @@ def style_fig(fig):
 
     return fig
 
-@st.cache_data
-def load_data(uploaded_file: str) -> pd.DataFrame:
-    bytes_data = uploaded_file.getvalue()
-    df = pd.read_csv(io.BytesIO(bytes_data), low_memory=False)
+DATA_COLS = [
+    "date","store_nbr","family","sales","onpromotion","holiday_type","dcoilwtico",
+    "city","state","store_type","cluster","transactions","year","month","week","quarter","day_of_week"
+]
+CAT_COLS = ["family","holiday_type","city","state","store_type","day_of_week"]
+DOW_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
-    if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+# >>>>>> CAMBIO MÍNIMO: IDs de Google Drive (los enlaces que pasaste)
+GDRIVE_ID_P1 = "1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr"
+GDRIVE_ID_P2 = "1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD"
 
-    for col in ["store_nbr", "year", "month", "quarter"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
-    for col in ["sales", "transactions", "onpromotion"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+@st.cache_data(ttl=60*60, show_spinner="Cargando datos...")
+def load_data() -> pd.DataFrame:
+    """Lee parte_1.csv y parte_2.csv (si existen) y concatena. Si no existen, los descarga desde Google Drive."""
+    base_dir = Path(__file__).parent
+    p1 = base_dir / "parte_1.csv"
+    p2 = base_dir / "parte_2.csv"
+
+    if (not p1.exists()) or (not p2.exists()):
+        try:
+            import gdown # necesitas añadir "gdown" a requirements.txt
+        except ImportError:
+            return pd.DataFrame()
+
+        url1 = f"https://drive.google.com/uc?id={GDRIVE_ID_P1}"
+        url2 = f"https://drive.google.com/uc?id={GDRIVE_ID_P2}"
+        gdown.download(url1, str(p1), quiet=True)
+        gdown.download(url2, str(p2), quiet=True)
+
+        # si por permisos/no público no se descarga, devolvemos vacío para mostrar el error existente
+        if (not p1.exists()) or (not p2.exists()) or p1.stat().st_size == 0 or p2.stat().st_size == 0:
+            return pd.DataFrame()
+
+    # Leemos solo columnas necesarias para el dashboard (ahorra memoria)
+    df1 = pd.read_csv(p1, usecols=DATA_COLS, low_memory=False)
+    df2 = pd.read_csv(p2, usecols=DATA_COLS, low_memory=False)
+
+    df = pd.concat([df1, df2], ignore_index=True)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    # Optimización de tipos (muy importante para Streamlit Cloud)
+    for c in CAT_COLS:
+        if c in df.columns:
+            df[c] = df[c].astype("category")
+
+    df["store_nbr"] = df["store_nbr"].astype("int16")
+    df["onpromotion"] = df["onpromotion"].astype("int16")
+    df["cluster"] = df["cluster"].astype("int16")
+    df["year"] = df["year"].astype("int16")
+    df["month"] = df["month"].astype("int8")
+    df["week"] = df["week"].astype("int16")
+    df["quarter"] = df["quarter"].astype("int8")
+
+    # Asegurar orden del día de semana
+    if "day_of_week" in df.columns:
+        df["day_of_week"] = df["day_of_week"].cat.set_categories(DOW_ORDER, ordered=True)
 
     return df
 
-
+@st.cache_data(ttl=60*60, show_spinner=False)
 def load_store(df,store):
     d = df[df["store_nbr"] == store].copy()
     total_sales = d["sales"].sum()
@@ -59,7 +102,7 @@ def load_store(df,store):
     sales_year["year"] = sales_year["year"].astype(str)
     return (d,total_sales,promo_sales,sales_year)
 
-
+@st.cache_data(ttl=60*60, show_spinner=False)
 def load_state(df,state):
     d= df[df["state"] == state].copy()
     transactions_year = d.groupby("year", as_index=False)["transactions"].sum().sort_values("year")
