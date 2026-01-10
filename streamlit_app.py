@@ -39,10 +39,13 @@ def load_data(uploaded_file: str) -> pd.DataFrame:
     for col in ["store_nbr", "year", "month", "quarter"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+    for col in ["sales", "transactions", "onpromotion"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
     return df
 
-@st.cache_data
+
 def load_store(df,store):
     d = df[df["store_nbr"] == store].copy()
     total_sales = d["sales"].sum()
@@ -51,7 +54,7 @@ def load_store(df,store):
     sales_year["year"] = sales_year["year"].astype(str)
     return (d,total_sales,promo_sales,sales_year)
 
-@st.cache_data
+
 def load_state(df,state):
     d= df[df["state"] == state].copy()
     transactions_year = d.groupby("year", as_index=False)["transactions"].sum().sort_values("year")
@@ -139,7 +142,7 @@ with tab1:
               .groupby("store_nbr", as_index=False)["sales"]
               .sum()
               .sort_values("sales", ascending=True)
-              .head(10)
+              .tail(10)
         )
         #promo["store_nbr"] = promo["store_nbr"].astype(str)
         fig = px.bar(promo, x="sales", y="store_nbr", orientation="h")
@@ -227,8 +230,17 @@ with tab3:
         fig.update_yaxes(type="category")
         st.plotly_chart(fig, width="stretch")
 
-    top_family = d.groupby("family", as_index=False)["sales"].sum().sort_values("sales", ascending=False)
-    st.success(f"Producto más vendido en {state}: {top_family.iloc[0]['family']}")
+    top_family = (
+    d.dropna(subset=["family", "sales"])
+     .groupby("family", as_index=False)["sales"]
+     .sum()
+     .sort_values("sales", ascending=False)
+)
+
+    if top_family.empty:
+        st.warning(f"No hay datos de ventas para {state} con los filtros actuales.")
+    else:
+        st.success(f"Producto más vendido en {state}: {top_family.iloc[0]['family']}")
 
     
 with tab4:
