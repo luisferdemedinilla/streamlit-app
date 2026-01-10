@@ -38,6 +38,14 @@ def load_data(path: str) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
     return df
 
+@st.cache_data
+def load_store(df,store):
+    return df[df["store_nbr"] == store]
+
+@st.cache_data
+def load_state(df,state):
+    return df[df["state"] == state]
+
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
 st.markdown("""
 <style>
@@ -95,7 +103,7 @@ with tab1:
               .tail(10)
         )
         fig = px.bar(top_prod, x="sales", y="family", orientation="h")
-        fig = style_fig(fig)
+        #fig = style_fig(fig)
         #fig.update_traces(marker_color="#4F46E5")
         st.plotly_chart(fig, use_container_width=True)
 
@@ -166,7 +174,7 @@ with tab1:
 with tab2:
     st.subheader("Análisis por tienda")
     store = st.selectbox("Selecciona tienda", sorted(df["store_nbr"].dropna().unique()))
-    d = df[df["store_nbr"] == store]
+    d = load_store(df,store)
 
     with st.container(border=True):
         c1, c2 = st.columns(2)
@@ -190,7 +198,7 @@ with tab2:
 with tab3:
     st.subheader("Análisis por estado")
     state = st.selectbox("Selecciona estado", sorted(df["state"].dropna().unique()))
-    d = df[df["state"] == state]
+    d = load_state(df,state)
 
     col1, col2 = st.columns(2)   #[3, 2]
 
@@ -206,7 +214,7 @@ with tab3:
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
         top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
-        top_store = top_store[top_store["sales"] > 0]
+        #top_store = top_store[top_store["sales"] > 0]
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
         fig.update_yaxes(type="category")
