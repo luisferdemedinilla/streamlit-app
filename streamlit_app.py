@@ -41,8 +41,8 @@ CAT_COLS = ["family","holiday_type","city","state","store_type","day_of_week"]
 DOW_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
 # >>>>>> CAMBIO MÍNIMO: IDs de Google Drive (los enlaces que pasaste)
-GDRIVE_ID_P1 = "1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr"
-GDRIVE_ID_P2 = "1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD"
+#GDRIVE_ID_P1 = "1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr"
+#GDRIVE_ID_P2 = "1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD"
 
 @st.cache_data(ttl=60*60, show_spinner="Cargando datos...")
 def load_data() -> pd.DataFrame:
@@ -57,8 +57,8 @@ def load_data() -> pd.DataFrame:
         except ImportError:
             return pd.DataFrame()
 
-        url1 = f"https://drive.google.com/uc?id={GDRIVE_ID_P1}"
-        url2 = f"https://drive.google.com/uc?id={GDRIVE_ID_P2}"
+        url2 = "https://drive.google.com/file/d/1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD/view?usp=sharing"
+        url1 = "https://drive.google.com/file/d/1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr/view?usp=sharing"
         gdown.download(url1, str(p1), quiet=True)
         gdown.download(url2, str(p2), quiet=True)
 
