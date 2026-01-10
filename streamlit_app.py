@@ -41,56 +41,41 @@ CAT_COLS = ["family","holiday_type","city","state","store_type","day_of_week"]
 DOW_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
 # >>>>>> CAMBIO MÍNIMO: IDs de Google Drive (los enlaces que pasaste)
-#GDRIVE_ID_P1 = "1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr"
-#GDRIVE_ID_P2 = "1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD"
+GDRIVE_ID_P1 = "1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr"
+GDRIVE_ID_P2 = "1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD"
 
 @st.cache_data(ttl=60*60, show_spinner="Cargando datos...")
 def load_data() -> pd.DataFrame:
-    """Lee parte_1.csv y parte_2.csv (si existen) y concatena. Si no existen, los descarga desde Google Drive."""
-    base_dir = Path(__file__).parent
-    p1 = base_dir / "parte_1.csv"
-    p2 = base_dir / "parte_2.csv"
+    import gdown  # requiere gdown en requirements.txt
 
-    if (not p1.exists()) or (not p2.exists()):
-        try:
-            import gdown # necesitas añadir "gdown" a requirements.txt
-        except ImportError:
-            return pd.DataFrame()
+    url1 = f"https://drive.google.com/uc?id={GDRIVE_ID_P1}"
+    url2 = f"https://drive.google.com/uc?id={GDRIVE_ID_P2}"
 
-        url2 = "https://drive.google.com/file/d/1z6bZHafpcBpXRS4N3QM7_Sce-XcTUrjD/view?usp=sharing"
-        url1 = "https://drive.google.com/file/d/1qa2Y3WhADTpxo0i5dIqBoIuFFFuXe4Rr/view?usp=sharing"
-        gdown.download(url1, str(p1), quiet=True)
-        gdown.download(url2, str(p2), quiet=True)
+    # Descarga a ficheros temporales (gestionados por gdown)
+    p1 = gdown.download(url1, output=None, quiet=True, fuzzy=True)
+    p2 = gdown.download(url2, output=None, quiet=True, fuzzy=True)
 
-        # si por permisos/no público no se descarga, devolvemos vacío para mostrar el error existente
-        if (not p1.exists()) or (not p2.exists()) or p1.stat().st_size == 0 or p2.stat().st_size == 0:
-            return pd.DataFrame()
+    if not p1 or not p2:
+        return pd.DataFrame()
 
-    # Leemos solo columnas necesarias para el dashboard (ahorra memoria)
-    df1 = pd.read_csv(p1, usecols=DATA_COLS, low_memory=False)
-    df2 = pd.read_csv(p2, usecols=DATA_COLS, low_memory=False)
+    df1 = pd.read_csv(p1, low_memory=False)
+    df2 = pd.read_csv(p2, low_memory=False)
 
     df = pd.concat([df1, df2], ignore_index=True)
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    # Optimización de tipos (muy importante para Streamlit Cloud)
-    for c in CAT_COLS:
-        if c in df.columns:
-            df[c] = df[c].astype("category")
+    # Normaliza tipos básicos
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    df["store_nbr"] = df["store_nbr"].astype("int16")
-    df["onpromotion"] = df["onpromotion"].astype("int16")
-    df["cluster"] = df["cluster"].astype("int16")
-    df["year"] = df["year"].astype("int16")
-    df["month"] = df["month"].astype("int8")
-    df["week"] = df["week"].astype("int16")
-    df["quarter"] = df["quarter"].astype("int8")
-
-    # Asegurar orden del día de semana
-    if "day_of_week" in df.columns:
-        df["day_of_week"] = df["day_of_week"].cat.set_categories(DOW_ORDER, ordered=True)
+    for col in ["sales", "transactions", "onpromotion", "store_nbr", "cluster", "year", "month", "week", "quarter"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
     return df
+
+   
+
+
 
 @st.cache_data(ttl=60*60, show_spinner=False)
 def load_store(df,store):
