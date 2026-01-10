@@ -67,9 +67,21 @@ def load_data() -> pd.DataFrame:
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    for col in ["sales", "transactions", "onpromotion", "store_nbr", "cluster", "year", "month", "week", "quarter"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+    for c in CAT_COLS:
+        if c in df.columns:
+            df[c] = df[c].astype("category")
+
+    df["store_nbr"] = df["store_nbr"].astype("int16")
+    df["onpromotion"] = df["onpromotion"].astype("int16")
+    df["cluster"] = df["cluster"].astype("int16")
+    df["year"] = df["year"].astype("int16")
+    df["month"] = df["month"].astype("int8")
+    df["week"] = df["week"].astype("int16")
+    df["quarter"] = df["quarter"].astype("int8")
+
+    # Asegurar orden del día de semana
+    if "day_of_week" in df.columns:
+        df["day_of_week"] = df["day_of_week"].cat.set_categories(DOW_ORDER, ordered=True)
 
     return df
 
