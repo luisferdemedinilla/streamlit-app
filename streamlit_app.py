@@ -94,7 +94,7 @@ def load_store(df,store):
     d = df[df["store_nbr"] == store].copy()
     total_sales = d["sales"].sum()
     promo_sales = d[d["onpromotion"] > 0]["sales"].sum()
-    sales_year = d.groupby("year", as_index=False)["sales"].sum().sort_values("year")
+    sales_year = d.groupby("year", as_index=False, observed=True)["sales"].sum().sort_values("year")
     sales_year["year"] = sales_year["year"].astype(str)
     return (d,total_sales,promo_sales,sales_year)
 
@@ -103,7 +103,7 @@ def load_state(df,state):
     d= df[df["state"] == state].copy()
     transactions_year = d.groupby("year", as_index=False)["transactions"].sum().sort_values("year")
     transactions_year["year"] = transactions_year["year"].astype(str)
-    top_store = d.groupby("store_nbr", as_index=False)["sales"].sum().sort_values("sales", ascending=True)
+    top_store = d.groupby("store_nbr", as_index=False, observed=True)["sales"].sum().sort_values("sales", ascending=True)
     return (d,transactions_year,top_store)
 
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
@@ -154,7 +154,7 @@ with tab1:
     with col1.container(border=True):
         st.subheader("Top productos más vendidos")
         top_prod = (
-            df.groupby("family", as_index=False)["sales"]
+            df.groupby("family", as_index=False, observed=True)["sales"]
               .sum()
               .sort_values("sales", ascending=True)
               .tail(10)
@@ -166,7 +166,7 @@ with tab1:
 
     with col2.container(border=True):
         st.subheader("Distribución ventas por tienda")
-        by_store = df.groupby("store_nbr", as_index=False)["sales"].sum()
+        by_store = df.groupby("store_nbr", as_index=False, observed=True)["sales"].sum()
         fig = px.histogram(by_store, x="sales",nbins=20)
         fig = style_fig(fig)
         #fig.update_traces(marker_color="#4F46E5")
@@ -181,7 +181,7 @@ with tab1:
         st.subheader("Top tiendas con ventas en promoción")
         promo = (
             df[df["onpromotion"] > 0]
-              .groupby("store_nbr", as_index=False)["sales"]
+              .groupby("store_nbr", as_index=False, observed=True)["sales"]
               .sum()
               .sort_values("sales", ascending=True)
               .tail(10)
@@ -195,7 +195,7 @@ with tab1:
     with col4.container(border=True):
         st.subheader("Estacionalidad: día con mayor venta media")
         dow = (
-            df.groupby("day_of_week", as_index=False)["sales"]
+            df.groupby("day_of_week", as_index=False, observed=True)["sales"]
               .mean()
               .sort_values("sales", ascending=False)
         )
@@ -211,7 +211,7 @@ with tab1:
     with col5.container(border=True):
         st.subheader("Estacionalidad: venta media por semana")
         wk = (
-            df.groupby("week", as_index=False)["sales"]
+            df.groupby("week", as_index=False, observed=True)["sales"]
               .mean()
               .sort_values("week")
         )
@@ -224,7 +224,7 @@ with tab1:
     with col6.container(border=True):
         st.subheader("Estacionalidad: venta media por mes")
         mo = (
-            df.groupby("month", as_index=False)["sales"]
+            df.groupby("month", as_index=False, observed=True)["sales"]
               .mean()
               .sort_values("month")
         )
@@ -280,7 +280,7 @@ with tab3:
 
     top_family = (
     d.dropna(subset=["family", "sales"])
-     .groupby("family", as_index=False)["sales"]
+     .groupby("family", as_index=False, observed=True)["sales"]
      .sum()
      .sort_values("sales", ascending=False)
 )
@@ -305,7 +305,7 @@ with tab4:
     dtemp["promo"] = dtemp["onpromotion"].gt(0).map({True: "Con promo", False: "Sin promo"})
     
     series = (
-    dtemp.groupby([pd.Grouper(key="date", freq="W-MON"), "promo"], as_index=False)["sales"]
+    dtemp.groupby([pd.Grouper(key="date", freq="W-MON"), "promo"], as_index=False, observed=True)["sales"]
          .sum()
          .sort_values("date")
 )
