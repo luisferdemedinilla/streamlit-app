@@ -201,11 +201,13 @@ with tab2:
     st.subheader("Análisis por tienda")
     store = st.selectbox("Selecciona tienda", sorted(df["store_nbr"].dropna().unique()))
     d,total_sales,promo_sales,sales_year = load_store(df,store)
+    prod_sold = int((d.groupby("family", observed=True)["sales"].sum() > 0).sum())
 
     with st.container(border=True):
-        c1, c2 = st.columns(2)
+        c1,c2 ,c3 = st.columns(3)
         c1.metric("Ventas totales (sales)", f"{total_sales:,.2f}")
-        c2.metric("Ventas en promoción (sales)", f"{promo_sales:,.2f}")
+        c2.metric("Productos vendidos (familias con ventas > 0)", f"{prod_sold:,.2f}")
+        c3.metric("Ventas en promoción (sales)", f"{promo_sales:,.2f}")
 
     with st.container(border=True):
         st.subheader("Ventas por año")
