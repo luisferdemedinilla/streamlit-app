@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import io
 def style_fig(fig, title: str | None = None):
     if title is not None:
         fig.update_layout(title=title)
@@ -28,23 +29,26 @@ def style_fig(fig, title: str | None = None):
     return fig
 
 @st.cache_data
-def load_data(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
+def load_data(uploaded_file: str) -> pd.DataFrame:
+    bytes_data = uploaded_file.getvalue()
+    df = pd.read_csv(io.BytesIO(bytes_data))
+
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    # Tipos básicos
+
     for col in ["store_nbr", "year", "month", "quarter"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+
     return df
 
 @st.cache_data
 def load_store(df,store):
-    return df[df["store_nbr"] == store]
+    return df[df["store_nbr"] == store].copy()
 
 @st.cache_data
 def load_state(df,state):
-    return df[df["state"] == state]
+    return df[df["state"] == state].copy()
 
 st.set_page_config(page_title="Dashboard Ventas", page_icon="📊", layout="wide",initial_sidebar_state="expanded")
 st.markdown("""
@@ -105,14 +109,14 @@ with tab1:
         fig = px.bar(top_prod, x="sales", y="family", orientation="h")
         #fig = style_fig(fig)
         #fig.update_traces(marker_color="#4F46E5")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col2.container(border=True):
         st.subheader("Distribución ventas por tienda")
         by_store = df.groupby("store_nbr", as_index=False)["sales"].sum()
         fig = px.histogram(by_store, x="sales",nbins=20)
         #fig.update_traces(marker_color="#4F46E5")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     st.divider()
 
@@ -131,7 +135,7 @@ with tab1:
         #promo["store_nbr"] = promo["store_nbr"].astype(str)
         fig = px.bar(promo, x="sales", y="store_nbr", orientation="h")
         fig.update_yaxes(type="category")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col4.container(border=True):
         st.subheader("Estacionalidad: día con mayor venta media")
@@ -141,7 +145,7 @@ with tab1:
               .sort_values("sales", ascending=False)
         )
         fig = px.bar(dow, x="day_of_week", y="sales")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     st.divider()
 
@@ -158,7 +162,7 @@ with tab1:
         fig = px.line(wk, x="week", y="sales",markers=True)
         #fig.update_traces(line=dict(color="#4F46E5", width=3))
         #color_discrete_sequence=["#4F46E5", "#22C55E", "#F59E0B"])
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
     with col6.container(border=True):
         st.subheader("Estacionalidad: venta media por mes")
@@ -168,7 +172,7 @@ with tab1:
               .sort_values("month")
         )
         fig = px.line(mo, x="month", y="sales",markers=True)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 
 with tab2:
@@ -192,7 +196,7 @@ with tab2:
         fig.update_traces(width=0.4)
         fig.update_yaxes(title="Ventas", tickformat=",.0f")
         fig.update_xaxes(type="category")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 
 with tab3:
@@ -209,7 +213,7 @@ with tab3:
         fig = px.bar(transactions_year, x="year", y="transactions")
         fig.update_traces(texttemplate="%{y:,.0f}", textposition="outside")
         fig.update_yaxes(title="Transacciones", tickformat=",.0f")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col2.container(border=True):
         st.subheader("Ranking de tiendas con más ventas")
@@ -218,7 +222,7 @@ with tab3:
         fig = px.bar(top_store, x="sales", y="store_nbr", orientation="h")
         fig.update_xaxes(title="Ventas", tickformat=",.0f")
         fig.update_yaxes(type="category")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     top_family = d.groupby("family", as_index=False)["sales"].sum().sort_values("sales", ascending=False)
     st.success(f"Producto más vendido en {state}: {top_family.iloc[0]['family']}")
@@ -249,4 +253,4 @@ with tab4:
     fig.update_layout(hovermode="x unified")
     fig.update_xaxes(dtick="M12", tickformat="%Y")  # ← solo años
     fig.update_xaxes(range=[series["date"].min() - pd.Timedelta(days=7), series["date"].max() + pd.Timedelta(days=7)])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
