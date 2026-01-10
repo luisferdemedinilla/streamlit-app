@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import io
 from pathlib import Path
 
 def style_fig(fig):
@@ -133,12 +132,9 @@ div[data-testid="stMetric"] {
 </style>
 """, unsafe_allow_html=True)
 # Carga de datos: si lo vas a subir a Streamlit Cloud, mejor permitir upload
-uploaded = st.file_uploader("Sube el dataset (CSV)", type=["csv"])
-if not uploaded:
-    st.info("Sube el CSV para empezar.")
-    st.stop()
 
-df = load_data(uploaded)
+
+df = load_data()
 
 tab1, tab2, tab3, tab4 = st.tabs(["🌍 Global", "🏪 Tienda", "🗺️ Estado", "✨ Extra"])
 
